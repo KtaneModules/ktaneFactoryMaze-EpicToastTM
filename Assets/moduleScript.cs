@@ -40,15 +40,6 @@ public class moduleScript : MonoBehaviour {
         _moduleId = _moduleIdCounter++;
         Module.OnActivate += Activate;
 
-        for (int i = 0; i < 3; i++)
-        {
-            checkmarks[i].enabled = false;
-            if (i != 2)
-            {
-                g[i].enabled = false;
-            }
-        }
-
         GenerateModule();
     }
 
@@ -136,6 +127,16 @@ public class moduleScript : MonoBehaviour {
 
     void GenerateModule()
     {
+        for (int i = 0; i < 3; i++)
+        {
+            checkmarks[i].enabled = false;
+            if (i != 2)
+            {
+                g[i].enabled = false;
+            }
+        }
+
+        unlocked = 0;
         keyHeld = 5;
         mazeNum = Random.Range(0, 3);
         startRoom = Random.Range(0, 5);
