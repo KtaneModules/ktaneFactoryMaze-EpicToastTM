@@ -1,10 +1,9 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 using System.Linq;
+using UnityEngine;
 
-public class moduleScript : MonoBehaviour {
-
+public class FactoryMazeScript : MonoBehaviour
+{
     public KMBombModule Module;
     public KMAudio Audio;
     public KMSelectable left, right, reset, unlock;
@@ -17,26 +16,26 @@ public class moduleScript : MonoBehaviour {
     private int _moduleId;
     private bool solved;
 
-    private readonly int[,,] mazes = { { { 1, 2 }, { 2, 3 }, { 3, 4 }, { 4, 0 }, { 0, 1 } },
+    private static readonly int[,,] mazes = { { { 1, 2 }, { 2, 3 }, { 3, 4 }, { 4, 0 }, { 0, 1 } },
                                        { { 1, 3 }, { 2, 4 }, { 0, 3 }, { 1, 4 }, { 0, 2 } },
                                        { { 2, 3 }, { 0, 4 }, { 1, 4 }, { 1, 2 }, { 0, 3 } } };
-    private readonly string[] rooms = { "Bathroom", "Assembly Line", "Cafeteria", "Room A9", "Broom Closet", "Basement", "Copy Room", "Unnecessarily\nLong-Named Room", "Library",
+    private static readonly string[] rooms = { "Bathroom", "Assembly Line", "Cafeteria", "Room A9", "Broom Closet", "Basement", "Copy Room", "Unnecessarily\nLong-Named Room", "Library",
                                         "Break Room", "Empty Room\nwith Two Doors", "Arcade", "Classroom", "Module Testing\nRoom", "Music Studio", "Computer Room", "Infirmary",
                                         "Bomb Room", "Space", "Storage Room", "Lounge", "Conference Room", "Kitchen", "Incinerator" };
-    private string[] usedRooms = { "", "", "", "", "" };
-    private int mazeNum, startRoom, currentRoom, keyNum, unlocked = 0;
-    private int[] doors = { 0, 0, 0, 0, 0 }; // this number represents which door takes you through the first exit each room; 0 is left, 1 is right
-    private readonly int[,,] defaultKeys = { { { 2, 3, 0 }, { 4, 1, 2 }, { 0, 1, 3 }, { 3, 4, 99 }, { 1, 2, 99 } },
+    private static readonly int[,,] defaultKeys = { { { 2, 3, 0 }, { 4, 1, 2 }, { 0, 1, 3 }, { 3, 4, 99 }, { 1, 2, 99 } },
                                              { { 3, 4, 0 }, { 0, 1, 1 }, { 2, 0, 4 }, { 3, 1, 99 }, { 4, 0, 99 } },
                                              { { 4, 3, 0 }, { 0, 3, 2 }, { 2, 1, 3 }, { 1, 4, 99 }, { 4, 0, 99 } } };
+
+    private string[] usedRooms;
+    private int mazeNum, startRoom, currentRoom, keyNum, unlocked = 0;
+    private readonly int[] doors = { 0, 0, 0, 0, 0 }; // this number represents which door takes you through the first exit each room; 0 is left, 1 is right
     // first two numbers of each key is the start/end of the hallway that the key is in; the number after is the room it corresponds to, where 99 is no room.
-    private int[,,] currentKeys = { { { 2, 3, 0 }, { 4, 1, 2 }, { 0, 1, 3 }, { 3, 4, 99 }, { 1, 2, 99 } },
-                                    { { 3, 4, 0 }, { 0, 1, 1 }, { 2, 0, 4 }, { 3, 1, 99 }, { 4, 0, 99 } },
-                                    { { 4, 3, 0 }, { 0, 3, 2 }, { 2, 1, 3 }, { 1, 4, 99 }, { 4, 0, 99 } } };
+    private int[,,] currentKeys;
     private readonly string[] doorStrings = { "left", "right" };
     private int keyHeld; // 5 = no key, 0-4 = keys #0-#4, 99 = useless key. this makes no sense but it works for me
 
-    void Start () {
+    void Start()
+    {
         _moduleId = _moduleIdCounter++;
         Module.OnActivate += Activate;
 
@@ -92,13 +91,13 @@ public class moduleScript : MonoBehaviour {
     {
         Debug.LogFormat("[Factory Maze #{0}] {1}", _moduleId, msg);
     }
-    
+
     void Press(int doorNum)
     {
         int previousRoom = currentRoom;
-        currentRoom = mazes[mazeNum, currentRoom, (doors[(currentRoom)] + doorNum) % 2];
+        currentRoom = mazes[mazeNum, currentRoom, (doors[currentRoom] + doorNum) % 2];
         roomText.text = usedRooms[currentRoom];
-        
+
         DebugMsg("You went through the " + doorStrings[doorNum] + " door. You are now in room #" + (currentRoom + 1) + ".");
 
         for (int i = 0; i < 5; i++)
@@ -114,7 +113,7 @@ public class moduleScript : MonoBehaviour {
 
                     DebugMsg("You dropped the key you already had.");
                 }
-                
+
                 keyHeld = currentKeys[mazeNum, i, 2];
                 keyNum = i;
                 currentKeys[mazeNum, i, 0] = 99;
@@ -141,21 +140,10 @@ public class moduleScript : MonoBehaviour {
         mazeNum = Random.Range(0, 3);
         startRoom = Random.Range(0, 5);
         currentRoom = startRoom;
+        usedRooms = Shuffle(rooms.ToArray()).Take(5).ToArray();
         for (int i = 0; i < 5; i++)
         {
-            usedRooms[i] = "";
             doors[i] = Random.Range(0, 2);
-        }
-        for (int i = 0; i < 5; i++)
-        {
-            int roomNum = Random.Range(0, rooms.Length);
-            int rndIncrease = Random.Range(1, rooms.Length);
-            while (usedRooms.Contains(rooms[roomNum]))
-            {
-                roomNum = (roomNum + rndIncrease) % rooms.Length;
-            }
-            usedRooms[i] = rooms[roomNum];
-            
             DebugMsg("Room #" + (i + 1) + " is called the " + usedRooms[i] + ".");
         }
         roomText.text = usedRooms[currentRoom];
@@ -163,7 +151,7 @@ public class moduleScript : MonoBehaviour {
         DebugMsg("You are in maze #" + (mazeNum + 1) + ".");
         DebugMsg("You started in room #" + (startRoom + 1) + ".");
 
-        currentKeys = defaultKeys;
+        currentKeys = (int[,,]) defaultKeys.Clone();
     }
 
     void Unlock()
@@ -182,7 +170,7 @@ public class moduleScript : MonoBehaviour {
         {
             DebugMsg("You attempted to unlock Room #" + (currentRoom + 1) + " with Key #" + (keyHeld + 1) + ".");
         }
-        
+
         if (keyHeld == currentRoom)
         {
             checkmarks[unlocked].enabled = true;
@@ -200,7 +188,7 @@ public class moduleScript : MonoBehaviour {
                 StartCoroutine("DoorAnimation", 2);
             }
         }
-        
+
         else
         {
             Module.HandleStrike();
@@ -246,7 +234,7 @@ public class moduleScript : MonoBehaviour {
             {
                 g[i].enabled = true;
             }
-            
+
             for (int i = 0; i < 30; i++)
             {
                 rightTransform.transform.Rotate(Vector3.forward, 4.5f);
@@ -256,8 +244,22 @@ public class moduleScript : MonoBehaviour {
         }
     }
 
-    public string TwitchHelpMessage = "!{0} press left will go through the left door, and !{0} press right will go through the right. !{0} unlock will attempt to unlock a lock, and !{0} reset will reset" +
-                                      "the module.";
+    static T Shuffle<T>(T list) where T : IList
+    {
+        for (int j = list.Count; j >= 1; j--)
+        {
+            int item = Random.Range(0, j);
+            if (item < j - 1)
+            {
+                var t = list[item];
+                list[item] = list[j - 1];
+                list[j - 1] = t;
+            }
+        }
+        return list;
+    }
+
+    private readonly string TwitchHelpMessage = "!{0} press left [go through the left door] | !{0} press right [go through the right door] | !{0} unlock [attempt to unlock a lock] | !{0} reset";
 
     IEnumerator ProcessTwitchCommand(string command)
     {
