@@ -11,6 +11,7 @@ public class FactoryMazeScript : MonoBehaviour
     public TextMesh roomText;
     public SpriteRenderer[] checkmarks, g;
     public GameObject[] doorObjects;
+    public GameObject ModuleGoBrrrr;
 
     private static int _moduleIdCounter = 1;
     private int _moduleId;
@@ -263,13 +264,13 @@ public class FactoryMazeScript : MonoBehaviour
 
     IEnumerator ProcessTwitchCommand(string command)
     {
-        if (command.ToLowerInvariant().Equals("press left"))
+        if (command.ToLowerInvariant().Equals("press left") || command.ToLowerInvariant().Equals("left"))
         {
             yield return null;
             yield return new KMSelectable[] { left };
         }
 
-        else if (command.ToLowerInvariant().Equals("press right"))
+        else if (command.ToLowerInvariant().Equals("press right") || command.ToLowerInvariant().Equals("right"))
         {
             yield return null;
             yield return new KMSelectable[] { right };
@@ -286,10 +287,24 @@ public class FactoryMazeScript : MonoBehaviour
             yield return null;
             yield return new KMSelectable[] { reset };
         }
-
         else
-        {
             yield break;
+    }
+
+    IEnumerator TwitchHandleForcedSolve () {
+      while (!solved) {
+        if (keyHeld == currentRoom)
+          unlock.OnInteract();
+        switch (UnityEngine.Random.Range(0,2)) {
+          case 0:
+          left.OnInteract();
+          break;
+          case 1:
+          right.OnInteract();
+          break;
         }
+        yield return new WaitForSecondsRealtime(.1f);
+        ModuleGoBrrrr.transform.localEulerAngles = new Vector3 (0f, UnityEngine.Random.Range(1f, 360f), 0f);
+      }
     }
 }
